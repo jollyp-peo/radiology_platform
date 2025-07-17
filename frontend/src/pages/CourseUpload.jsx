@@ -1,89 +1,131 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authFetch } from "../utils/authFetch";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
-const CourseUpload = () => {
-  const [title, setTitle] = useState("");
-  const [video, setVideo] = useState(null);
-  const [pdf, setPdf] = useState(null);
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+const Courses = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTypeRaw = queryParams.get("type");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title || !video) {
-      setMessage("Title and video are required.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("video", video);
-    if (pdf) formData.append("material", pdf);
-
-    try {
-      const res = await authFetch("http://127.0.0.1:8000/api/courses/upload/", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("✅ Course uploaded!");
-        setTimeout(() => navigate("/courses"), 1500);
-      } else {
-        setMessage(`❌ ${data.detail || "Upload failed"}`);
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Upload error");
-    }
+  const convertToFilter = (type) => {
+    if (type === "Video") return "Videos";
+    if (type === "Lecture") return "Lectures";
+    if (type === "Presentation") return "Presentations";
+    return "Videos"; // default fallback
   };
 
+  const [allCourses, setAllCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState(convertToFilter(initialTypeRaw));
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/courses/")
+      .then((res) => res.json())
+      .then((data) => {
+        setAllCourses(data);
+        setFilteredCourses(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    const result = allCourses.filter((course) => {
+      const matchesQuery = course.title.toLowerCase().includes(query.toLowerCase());
+
+      const matchesType =
+        (typeFilter === "Videos" && course.video) ||
+        (typeFilter === "Lectures" && course.meet_link) ||
+        (typeFilter === "Presentations" && course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx"));
+
+      return matchesQuery && matchesType;
+    });
+
+    setFilteredCourses(result);
+  }, [query, allCourses, typeFilter]);
+
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow mt-6 rounded space-y-6">
-      <h2 className="text-2xl font-bold text-center">Upload Course Material</h2>
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <h2 className="text-3xl font-bold text-center">Educational Courses</h2>
 
-      {message && <p className="text-center text-red-600">{message}</p>}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Search Box */}
+      <div className="flex justify-center">
         <input
           type="text"
-          placeholder="Course Title *"
-          className="w-full p-2 border rounded"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
+          placeholder="Search courses..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="border px-4 py-2 rounded w-full sm:w-96"
         />
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium">Video File *</label>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={(e) => setVideo(e.target.files[0])}
-            required
-          />
+      {/* Filters */}
+      <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
+        {["Videos", "Lectures", "Presentations"].map((type) => (
+          <button
+            key={type}
+            className={`px-4 py-2 rounded-full ${
+              typeFilter === type
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+            }`}
+            onClick={() => setTypeFilter(type)}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
+      {/* Course Results */}
+      {filteredCourses.length === 0 ? (
+        <p className="text-center text-gray-500">No matching courses found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {filteredCourses.map((course) => (
+            <div
+              key={course.id}
+              className="bg-white shadow p-4 rounded hover:shadow-lg"
+            >
+              {/* Video */}
+              {course.video && (
+                <video
+                  src={course.video}
+                  controls
+                  className="w-full mt-3 rounded"
+                />
+              )}
+
+              {/* Title and Date */}
+              <h3 className="text-lg font-semibold">{course.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">{course.created_at}</p>
+
+              {/* Lecture Link */}
+              {course.meet_link && (
+                <a
+                  href={course.meet_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mt-3 text-blue-600 underline"
+                >
+                  Join Lecture
+                </a>
+              )}
+
+              {/* Presentation */}
+              {course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx") ? (
+                <a
+                  href={course.material}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mt-3 text-blue-600 underline"
+                >
+                  View Presentation
+                </a>
+              ) : null}
+            </div>
+          ))}
         </div>
-
-        <div>
-          <label className="block text-sm font-medium">Supplementary PDF</label>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setPdf(e.target.files[0])}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
-        >
-          Upload Course
-        </button>
-      </form>
+      )}
     </div>
   );
 };
 
-export default CourseUpload;
+export default Courses;

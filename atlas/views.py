@@ -94,3 +94,18 @@ class AtlasUploadView(APIView):
             "message": f"{saved_count} image(s) processed.",
             "series_id": series.id
         }, status=status.HTTP_201_CREATED)
+
+# delete logic
+class AtlasDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'admin':
+            return Response({"detail": "Only admin can delete."}, status=403)
+
+        try:
+            series = AtlasSeries.objects.get(id=pk)
+            series.delete()
+            return Response({"message": "Series deleted."}, status=status.HTTP_204_NO_CONTENT)
+        except AtlasSeries.DoesNotExist:
+            return Response({"detail": "Not found."}, status=404)

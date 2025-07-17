@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FaTrash } from "react-icons/fa";
 
 const AdminDashboard = () => {
   const [series, setSeries] = useState([]);
@@ -10,6 +11,31 @@ const AdminDashboard = () => {
       .then(setSeries)
       .catch(console.error);
   }, []);
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this series?");
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/atlas/${id}/delete/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        setSeries((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        alert("Failed to delete. Make sure you're authorized.");
+      }
+    } catch (err) {
+      console.error("Error deleting series:", err);
+      alert("An error occurred while deleting.");
+    }
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -43,18 +69,19 @@ const AdminDashboard = () => {
         <table className="w-full text-sm border">
           <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="p-2 border">ID</th>
+              <th className="p-2 border">#</th>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Modality</th>
               <th className="p-2 border">Slices</th>
               <th className="p-2 border">Legend</th>
               <th className="p-2 border">View</th>
+              <th className="p-2 border">Delete</th>
             </tr>
           </thead>
           <tbody>
-            {series.map((item) => (
+            {series.map((item, index) => (
               <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="p-2 border">{item.id}</td>
+                <td className="p-2 border">{index + 1}</td>
                 <td className="p-2 border">{item.name}</td>
                 <td className="p-2 border">{item.modality}</td>
                 <td className="p-2 border">{item.images?.length || 0}</td>
@@ -76,6 +103,11 @@ const AdminDashboard = () => {
                   >
                     View
                   </Link>
+                </td>
+                <td className="p-2 border text-red-600 text-center">
+                  <button onClick={() => handleDelete(item.id)}>
+                    <FaTrash />
+                  </button>
                 </td>
               </tr>
             ))}

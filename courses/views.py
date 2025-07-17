@@ -10,6 +10,7 @@ from .serializers import CourseSerializer
 import os
 import subprocess
 from django.conf import settings
+from rest_framework.generics import DestroyAPIView
 
 ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/avi', 'video/x-matroska', 'video/quicktime']
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024  # 1 GB
@@ -70,3 +71,7 @@ class CourseUploadView(APIView):
 
             return Response(CourseSerializer(course).data, status=201)
         return Response(serializer.errors, status=400)
+
+class CourseDeleteAPIView(DestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer

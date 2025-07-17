@@ -8,6 +8,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 
 from .models import Case, CaseImage
 from .serializers import CaseSerializer
@@ -91,3 +92,13 @@ class CaseUploadView(APIView):
             "case_id": case.id
         }, status=status.HTTP_201_CREATED)
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_case(request, pk):
+    try:
+        case = Case.objects.get(pk=pk)
+    except Case.DoesNotExist:
+        return Response({'error': 'Case not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    case.delete()
+    return Response({'message': 'Case deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)

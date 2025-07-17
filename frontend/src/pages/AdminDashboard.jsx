@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { authFetch } from "../utils/authFetch";
 
 const AdminDashboard = () => {
   const [series, setSeries] = useState([]);
@@ -29,11 +30,8 @@ const AdminDashboard = () => {
     setToDelete(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/atlas/${item.id}/delete/`, {
+      const res = await authFetch(`http://127.0.0.1:8000/api/atlas/${item.id}/delete/`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       if (res.ok) {
@@ -69,9 +67,9 @@ const AdminDashboard = () => {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/atlas/upload/`, {
+      const res = await authFetch(`http://127.0.0.1:8000/api/atlas/upload/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+      
         body: formData,
       });
 

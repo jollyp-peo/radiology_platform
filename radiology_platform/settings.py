@@ -141,3 +141,18 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Allow more files during upload
+DATA_UPLOAD_MAX_NUMBER_FILES = 10000  # or even 10000 if you expect very large series
+
+# Optional: allow larger total upload size
+#DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
+#FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
+
+
+# token settings
+
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+# }

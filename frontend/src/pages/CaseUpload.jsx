@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/authFetch";
+
 
 const CaseUpload = () => {
   const [title, setTitle] = useState("");
@@ -23,11 +25,8 @@ const CaseUpload = () => {
     files.forEach((f) => formData.append("files", f));
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/cases/upload/", {
+      const res = await authFetch("http://127.0.0.1:8000/api/cases/upload/", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
         body: formData,
       });
       const data = await res.json();

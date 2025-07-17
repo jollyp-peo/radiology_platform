@@ -14,6 +14,8 @@ import AtlasUpload from "./pages/AtlasUpload";
 import AdminDashboard from "./pages/AdminDashboard";
 import CaseUpload from "./pages/CaseUpload";
 import CourseUpload from "./pages/CourseUpload";
+import CaseViewer from "./pages/CaseViewer";
+import Quiz from "./pages/Quiz";
 
 function App() {
 	return (
@@ -92,11 +94,30 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
+
+				<Route
+					path="/cases/view/:id"
+					element={
+						<ProtectedRoute>
+							<CaseViewer />
+						</ProtectedRoute>
+					}
+				/>
+
 				<Route
 					path="/courses/upload"
 					element={
 						<ProtectedRoute>
 							<CourseUpload />
+						</ProtectedRoute>
+					}
+				/>
+
+				<Route
+					path="/quiz"
+					element={
+						<ProtectedRoute>
+							<Quiz />
 						</ProtectedRoute>
 					}
 				/>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/authFetch";
 
 const AtlasUpload = () => {
 	const [name, setName] = useState("");
@@ -30,11 +31,8 @@ const AtlasUpload = () => {
 
 		setLoading(true);
 		try {
-			const res = await fetch("http://localhost:8000/api/atlas/upload/", {
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${localStorage.getItem("token")}`,
-				},
+			const res = await authFetch("http://localhost:8000/api/atlas/upload/", {
+				method: "POST",			
 				body: formData,
 			});
 

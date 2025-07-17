@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/authFetch";
 
 const CourseUpload = () => {
   const [title, setTitle] = useState("");
@@ -21,11 +22,8 @@ const CourseUpload = () => {
     if (pdf) formData.append("material", pdf);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/courses/upload/", {
+      const res = await authFetch("http://127.0.0.1:8000/api/courses/upload/", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
         body: formData,
       });
 

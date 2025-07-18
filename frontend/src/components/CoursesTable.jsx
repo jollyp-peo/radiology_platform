@@ -8,7 +8,7 @@ const CoursesTable = ({ courses, setCourses }) => {
   const [typeFilter, setTypeFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
-  const perPage = 10;
+  const perPage = 50;
 
   const filtered = useMemo(() => {
     return courses.filter(

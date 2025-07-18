@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AtlasTable from "../components/AtlasTable";
 import CoursesTable from "../components/CoursesTable";
 import CasesTable from "../components/CasesTable";
+import { authFetch } from "../utils/authFetch";
 
 const AdminDashboard = () => {
   const [series, setSeries] = useState([]);
@@ -10,22 +11,24 @@ const AdminDashboard = () => {
   const [cases, setCases] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/atlas/")
+    authFetch("http://127.0.0.1:8000/api/atlas/")
       .then((res) => res.json())
-      .then(setSeries)
+      .then((data) => {
+        console.log("Atlas data:", data);
+        setSeries(data);
+      })
       .catch(console.error);
 
-    fetch("http://127.0.0.1:8000/api/courses/")
+    authFetch("http://127.0.0.1:8000/api/courses/")
       .then((res) => res.json())
       .then(setCourses)
       .catch(console.error);
 
-    fetch("http://127.0.0.1:8000/api/cases/")
+    authFetch("http://127.0.0.1:8000/api/cases/")
       .then((res) => res.json())
       .then(setCases)
       .catch(console.error);
   }, []);
-
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -62,7 +65,7 @@ const AdminDashboard = () => {
       {/* Cases Table */}
       <section className="mb-12">
         <h2 className="text-xl font-semibold mb-4">Uploaded Cases</h2>
-        <CasesTable cases={cases} />
+        <CasesTable cases={cases} setCases={setCases} />
       </section>
 
       {/* Courses Table */}

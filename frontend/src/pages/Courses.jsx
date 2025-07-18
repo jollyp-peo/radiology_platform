@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import CourseCard from "../components/CourseCard";
 
 const Courses = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 6;
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -26,8 +29,7 @@ const Courses = () => {
 
       const matchesType =
         (typeFilter === "Videos" && course.video) ||
-        (typeFilter === "Lectures" && course.meet_link) ||
-        (typeFilter === "Lectures" && course.recorded_link) ||
+        (typeFilter === "Lectures" && (course.meet_link || course.recorded_link)) ||
         (typeFilter === "Presentations" &&
           (course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx")));
 
@@ -35,7 +37,14 @@ const Courses = () => {
     });
 
     setFilteredCourses(result);
+    setCurrentPage(1);
   }, [query, allCourses, typeFilter]);
+
+  const totalPages = Math.ceil(filteredCourses.length / perPage);
+  const paginatedCourses = filteredCourses.slice(
+    (currentPage - 1) * perPage,
+    currentPage * perPage
+  );
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -70,50 +79,44 @@ const Courses = () => {
       </div>
 
       {/* Results */}
-      {filteredCourses.length === 0 ? (
+      {paginatedCourses.length === 0 ? (
         <p className="text-center text-gray-500">No matching courses found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <div key={course.id} className="bg-white shadow p-4 rounded hover:shadow-lg">
-              {course.video && (
-                <video src={course.video} controls className="w-full mt-3 rounded" />
-              )}
-              <h3 className="text-lg font-semibold">{course.title}</h3>
-              <p className="text-sm text-gray-500 mt-1">{course.created_at}</p>
-
-              {course.meet_link ? course.meet_link && (
-                <a
-                  href={course.meet_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-3 text-blue-600 underline"
-                >
-                  Join Lecture
-                </a>
-              ): course.recorded_link && (
-                <a
-                  href={course.recorded_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-3 text-blue-600 underline"
-                >
-                  Watch Recorded Lecture
-                </a>
-              )}
-
-              {(course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx")) && (
-                <a
-                  href={course.material}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-3 text-blue-600 underline"
-                >
-                  View Presentation
-                </a>
-              )}
-            </div>
+          {paginatedCourses.map((course) => (
+            <CourseCard key={course.id} course={course} />
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 text-sm mt-4">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

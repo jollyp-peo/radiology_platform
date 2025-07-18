@@ -4,24 +4,23 @@ import { FaTrash } from "react-icons/fa";
 import { authFetch } from "../utils/authFetch";
 import toast from "react-hot-toast";
 
-const AtlasTable = ({ series: initialSeries }) => {
-  const [series, setSeries] = useState(initialSeries || []);
+const AtlasTable = ({ series, setSeries }) => {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
 
-  const perPage = 10;
+  const perPage = 50;
 
   const filtered = useMemo(() => {
     return series
       .filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
+        (item.name || "").toLowerCase().includes(search.toLowerCase())
       )
       .sort((a, b) => {
-        const aVal = a[sortBy]?.toString().toLowerCase();
-        const bVal = b[sortBy]?.toString().toLowerCase();
+        const aVal = (a[sortBy] || "").toString().toLowerCase();
+        const bVal = (b[sortBy] || "").toString().toLowerCase();
         if (aVal < bVal) return sortAsc ? -1 : 1;
         if (aVal > bVal) return sortAsc ? 1 : -1;
         return 0;

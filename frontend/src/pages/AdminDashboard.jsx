@@ -54,6 +54,12 @@ const AdminDashboard = () => {
         >
           Upload Course
         </Link>
+        <Link
+          to="/ebook/upload"
+          className="bg-amber-600 text-white px-4 py-2 rounded shadow hover:bg-amber-700"
+        >
+          Upload eBooks
+        </Link>
       </div>
 
       {/* Atlas Table */}

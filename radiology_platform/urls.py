@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/atlas/', include('atlas.urls')),
     path('api/cases/', include('cases.urls')),
     path('api/courses/', include('courses.urls')),
-    # path('api/ebooks/', include('ebooks.urls')),
+    path('api/ebooks/', include('ebooks.urls')),
     path('api/', include('accounts.urls')),
     # path('api/core/', include('core.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

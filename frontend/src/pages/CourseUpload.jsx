@@ -1,131 +1,175 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/authFetch";
 
-const Courses = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const initialTypeRaw = queryParams.get("type");
+const CourseUpload = () => {
+  const [type, setType] = useState("Video");
+  const [title, setTitle] = useState("");
+  const [video, setVideo] = useState(null);
+  const [presentation, setPresentation] = useState(null);
+  const [meetLink, setMeetLink] = useState("");
+  const [recordedLink, setRecordedLink] = useState("");
+  const [message, setMessage] = useState("");
 
-  const convertToFilter = (type) => {
-    if (type === "Video") return "Videos";
-    if (type === "Lecture") return "Lectures";
-    if (type === "Presentation") return "Presentations";
-    return "Videos"; // default fallback
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!title) {
+      setMessage("Title is required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("type", type);
+
+    if (type === "Video") {
+      if (!video) {
+        setMessage("Video file is required.");
+        return;
+      }
+      formData.append("video", video);
+    } else if (type === "Lecture") {
+      if (meetLink) formData.append("meet_link", meetLink);
+      if (recordedLink) formData.append("recorded_link", recordedLink);
+    } else if (type === "Presentation") {
+      if (!presentation) {
+        setMessage("Presentation file is required.");
+        return;
+      }
+      formData.append("material", presentation);
+    }
+
+    try {
+      const res = await authFetch("http://127.0.0.1:8000/api/courses/upload/", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("✅ Course uploaded!");
+        setTimeout(() => navigate(`/courses?type=${type}`), 1500);
+      } else {
+        setMessage(`❌ ${data.detail || "Upload failed"}`);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Upload error");
+    }
   };
 
-  const [allCourses, setAllCourses] = useState([]);
-  const [filteredCourses, setFilteredCourses] = useState([]);
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState(convertToFilter(initialTypeRaw));
-
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/courses/")
-      .then((res) => res.json())
-      .then((data) => {
-        setAllCourses(data);
-        setFilteredCourses(data);
-      });
-  }, []);
-
-  useEffect(() => {
-    const result = allCourses.filter((course) => {
-      const matchesQuery = course.title.toLowerCase().includes(query.toLowerCase());
-
-      const matchesType =
-        (typeFilter === "Videos" && course.video) ||
-        (typeFilter === "Lectures" && course.meet_link) ||
-        (typeFilter === "Presentations" && course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx"));
-
-      return matchesQuery && matchesType;
-    });
-
-    setFilteredCourses(result);
-  }, [query, allCourses, typeFilter]);
-
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <h2 className="text-3xl font-bold text-center">Educational Courses</h2>
+    <div className="max-w-3xl mx-auto p-6 bg-white shadow mt-6 rounded space-y-6">
+      <h2 className="text-2xl font-bold text-center">Upload Course Material</h2>
 
-      {/* Search Box */}
-      <div className="flex justify-center">
+      {message && <p className="text-center text-red-600">{message}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Course Type Selector */}
+        <div>
+          <label className="block mb-1 font-medium">Type *</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full p-2 border rounded"
+          >
+            <option value="Video">Video</option>
+            <option value="Lecture">Lecture</option>
+            <option value="Presentation">Presentation</option>
+          </select>
+        </div>
+
+        {/* Title */}
         <input
           type="text"
-          placeholder="Search courses..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="border px-4 py-2 rounded w-full sm:w-96"
+          placeholder="Course Title *"
+          className="w-full p-2 border rounded"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
         />
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
-        {["Videos", "Lectures", "Presentations"].map((type) => (
-          <button
-            key={type}
-            className={`px-4 py-2 rounded-full ${
-              typeFilter === type
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-            onClick={() => setTypeFilter(type)}
-          >
-            {type}
-          </button>
-        ))}
-      </div>
-
-      {/* Course Results */}
-      {filteredCourses.length === 0 ? (
-        <p className="text-center text-gray-500">No matching courses found.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <div
-              key={course.id}
-              className="bg-white shadow p-4 rounded hover:shadow-lg"
+        {/* Conditionally Rendered Inputs */}
+        {type === "Video" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Video File *</label>
+            <label
+              htmlFor="video"
+              className="inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700"
             >
-              {/* Video */}
-              {course.video && (
-                <video
-                  src={course.video}
-                  controls
-                  className="w-full mt-3 rounded"
-                />
-              )}
+              Choose Video
+            </label>
+            <input
+              id="video"
+              type="file"
+              accept="video/*"
+              onChange={(e) => setVideo(e.target.files[0])}
+              className="hidden"
+              required
+            />
+            {video && (
+              <p className="mt-2 text-sm text-gray-600">Selected: {video.name}</p>
+            )}
+          </div>
+        )}
 
-              {/* Title and Date */}
-              <h3 className="text-lg font-semibold">{course.title}</h3>
-              <p className="text-sm text-gray-500 mt-1">{course.created_at}</p>
+        {type === "Lecture" && (
+          <>
+            <input
+              type="url"
+              placeholder="Live Class Link (Zoom, Meet, etc)"
+              className="w-full p-2 border rounded"
+              value={meetLink}
+              onChange={(e) => setMeetLink(e.target.value)}
+            />
+            <input
+              type="url"
+              placeholder="Recorded Video Link (optional)"
+              className="w-full p-2 border rounded"
+              value={recordedLink}
+              onChange={(e) => setRecordedLink(e.target.value)}
+            />
+          </>
+        )}
 
-              {/* Lecture Link */}
-              {course.meet_link && (
-                <a
-                  href={course.meet_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-3 text-blue-600 underline"
+        {type === "Presentation" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Upload .ppt or .pptx *</label>
+            <label
+              htmlFor="presentation"
+              className="inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700"
                 >
-                  Join Lecture
-                </a>
-              )}
-
-              {/* Presentation */}
-              {course.material?.endsWith(".ppt") || course.material?.endsWith(".pptx") ? (
-                <a
-                  href={course.material}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block mt-3 text-blue-600 underline"
-                >
-                  View Presentation
-                </a>
-              ) : null}
-            </div>
-          ))}
+              Choose File
+            </label>
+            <input
+              id="presentation"
+              type="file"
+              accept=".ppt,.pptx"
+              onChange={(e) => setPresentation(e.target.files[0])}
+              required
+              className="hidden"
+            />
+            {presentation && (
+              <p className="mt-2 text-sm text-gray-600">
+                Selected: {presentation.name}
+              </p>
+            )}
         </div>
       )}
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+        >
+          Upload Course
+        </button>
+      </form>
     </div>
   );
 };
 
-export default Courses;
+export default CourseUpload;

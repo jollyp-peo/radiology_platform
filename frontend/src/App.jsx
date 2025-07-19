@@ -15,6 +15,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CaseUpload from "./pages/CaseUpload";
 import CourseUpload from "./pages/CourseUpload";
 import CaseViewer from "./pages/CaseViewer";
+import EbookUpload from "./pages/EbookUpload";
+
 import Quiz from "./pages/Quiz";
 
 function App() {
@@ -109,6 +111,15 @@ function App() {
 					element={
 						<ProtectedRoute>
 							<CourseUpload />
+						</ProtectedRoute>
+					}
+				/>
+
+				<Route
+					path="/ebooks/upload"
+					element={
+						<ProtectedRoute>
+							<EbookUpload />
 						</ProtectedRoute>
 					}
 				/>
